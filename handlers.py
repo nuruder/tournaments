@@ -103,12 +103,47 @@ async def on_venue_selected(callback: CallbackQuery, state: FSMContext):
     venue = venues[venue_idx]
     await state.update_data(venue=venue)
 
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Без описания", callback_data="nodesc")]
+    ])
     await callback.message.answer(
         f"✅ Площадка: <b>{venue['name']}</b>\n\n"
-        f"Теперь отправьте описание турнира (текст сообщения):",
+        f"Отправьте описание турнира или нажмите кнопку:",
         parse_mode="HTML",
+        reply_markup=keyboard,
     )
     await state.set_state(TournamentPublish.waiting_description)
+    await callback.answer()
+
+
+@router.callback_query(TournamentPublish.waiting_description, F.data == "nodesc")
+async def on_no_description(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Admin clicked 'No description' — skip to confirmation."""
+    if callback.from_user.id != ADMIN_ID:
+        await callback.answer("Нет доступа", show_alert=True)
+        return
+    await state.update_data(description="")
+    data = await state.get_data()
+    tournament = await get_tournament_by_cid(data["tournament_key"])
+    venue = data["venue"]
+    if not tournament:
+        await callback.message.answer("⚠️ Турнир не найден в базе.")
+        await state.clear()
+        await callback.answer()
+        return
+    preview = format_post(tournament, venue, "")
+    await callback.message.answer(
+        f"👁 <b>Превью поста:</b>\n\n{preview}",
+        parse_mode="HTML",
+    )
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Опубликовать", callback_data="confirm:yes"),
+            InlineKeyboardButton(text="❌ Отмена", callback_data="confirm:no"),
+        ]
+    ])
+    await callback.message.answer("Опубликовать в группу?", reply_markup=keyboard)
+    await state.set_state(TournamentPublish.waiting_confirmation)
     await callback.answer()
 
 
