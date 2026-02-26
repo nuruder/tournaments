@@ -67,12 +67,20 @@ def format_post(tournament: dict, venue: dict, description: str) -> str:
     url = tournament["tournament_url"]
     dates_ru = format_dates_russian(tournament["dates"])
 
+    source = tournament.get("source", "padelteams")
+    if source == "tiepadel":
+        organizer = "Federação Portuguesa de Padel"
+        tour_type = "Federation"
+    else:
+        organizer = "Padel Players"
+        tour_type = "Social"
+
     lines = [
         f'<a href="{url}">{name}</a>',
         f"📅 {dates_ru}",
         f'📍 <a href="{venue["url"]}">{venue["name"]}</a>',
-        "<b>Организатор:</b> Padel Players",
-        "<b>Тип турнира:</b> Social",
+        f"<b>Организатор:</b> {organizer}",
+        f"<b>Тип турнира:</b> {tour_type}",
     ]
     if description:
         lines.append("")
