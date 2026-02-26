@@ -32,6 +32,12 @@ def load_venues() -> list[dict]:
     return venues
 
 
+def save_venue(venue: dict):
+    """Append a new venue to venues.txt."""
+    with open(VENUES_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{venue['name']} | {venue['url']}\n")
+
+
 def format_dates_russian(dates_str: str) -> str:
     """Convert dates like '21-03-2026 / 22-03-2026' to Russian format."""
     dates_str = dates_str.strip()

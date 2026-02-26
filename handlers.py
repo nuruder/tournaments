@@ -7,7 +7,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 from config import ADMIN_ID
 from database import get_tournament_by_cid, mark_published
-from poster import load_venues, format_post, publish_to_group
+from poster import load_venues, save_venue, format_post, publish_to_group
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +84,31 @@ async def on_publish_start(callback: CallbackQuery, state: FSMContext):
     )
     await state.set_state(TournamentPublish.waiting_venue)
     await callback.answer()
+
+
+@router.message(TournamentPublish.waiting_venue, F.from_user.id == ADMIN_ID)
+async def on_venue_text(message: Message, state: FSMContext):
+    """Admin typed a custom venue in 'Name | URL' format."""
+    text = (message.text or "").strip()
+    parts = text.split("|", 1)
+    if len(parts) != 2 or not parts[1].strip():
+        await message.answer("Формат: <code>Название | ссылка на Google Maps</code>", parse_mode="HTML")
+        return
+
+    venue = {"name": parts[0].strip(), "url": parts[1].strip()}
+    save_venue(venue)
+    await state.update_data(venue=venue)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Без описания", callback_data="nodesc")]
+    ])
+    await message.answer(
+        f"✅ Площадка: <b>{venue['name']}</b> (сохранена в venues.txt)\n\n"
+        f"Отправьте описание турнира или нажмите кнопку:",
+        parse_mode="HTML",
+        reply_markup=keyboard,
+    )
+    await state.set_state(TournamentPublish.waiting_description)
 
 
 @router.callback_query(TournamentPublish.waiting_venue, F.data.startswith("venue:"))
