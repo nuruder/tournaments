@@ -5,11 +5,11 @@ After=network.target
 [Service]
 Type=simple
 User=bot
-WorkingDirectory=/home/bot/tournaments
-ExecStart=/home/bot/tournaments/venv/bin/python bot.py
+WorkingDirectory=/opt/tournament_bot
+ExecStart=/opt/tournament_bot/venv/bin/python bot.py
 Restart=always
 RestartSec=10
-EnvironmentFile=/home/bot/tournaments/.env
+EnvironmentFile=/opt/tournament_bot/.env
 
 [Install]
 WantedBy=multi-user.target

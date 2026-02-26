@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-APP_DIR="/home/bot/tournaments"
+APP_DIR="/opt/tournament_bot"
 REPO="https://github.com/nuruder/tournaments.git"
 
 # Create bot user (if not exists)
