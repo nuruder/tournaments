@@ -1,0 +1,15 @@
+[Unit]
+Description=Padel Tournaments Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=bot
+WorkingDirectory=/home/bot/tournaments
+ExecStart=/home/bot/tournaments/venv/bin/python bot.py
+Restart=always
+RestartSec=10
+EnvironmentFile=/home/bot/tournaments/.env
+
+[Install]
+WantedBy=multi-user.target
