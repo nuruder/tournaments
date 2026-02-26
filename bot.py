@@ -37,7 +37,10 @@ async def check_new_tournaments(bot: Bot):
                 image_url=t["image_url"],
                 tournament_url=t["tournament_url"],
             )
-            await notify_admin_new_tournament(bot, t)
+            try:
+                await notify_admin_new_tournament(bot, t)
+            except Exception:
+                logger.exception(f"Failed to notify admin about {t['name']}")
 
 
 async def main():
