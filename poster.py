@@ -71,8 +71,8 @@ def format_post(tournament: dict, venue: dict, description: str) -> str:
         f'<a href="{url}">{name}</a>',
         f"📅 {dates_ru}",
         f'📍 <a href="{venue["url"]}">{venue["name"]}</a>',
-        "Организатор: Padel Players",
-        "Тип турнира: Social",
+        "<b>Организатор:</b> Padel Players",
+        "<b>Тип турнира:</b> Social",
     ]
     if description:
         lines.append("")
