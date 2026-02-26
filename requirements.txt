@@ -1,0 +1,6 @@
+aiogram>=3.4
+requests
+beautifulsoup4
+apscheduler>=3.10
+aiosqlite
+python-dotenv
