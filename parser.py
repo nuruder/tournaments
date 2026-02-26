@@ -1,4 +1,6 @@
 import re
+from datetime import datetime, date
+
 import requests
 from bs4 import BeautifulSoup
 from config import PARSER_URL, BASE_URL
@@ -45,6 +47,16 @@ def fetch_tournaments() -> list[dict]:
                 image_url = BASE_URL + full_src if full_src.startswith("/") else full_src
 
         tournament_url = BASE_URL + href if href.startswith("/") else href
+
+        # Filter: only future tournaments (last date >= today)
+        last_date_str = dates.split("/")[-1].strip()
+        try:
+            last_date = datetime.strptime(last_date_str, "%d-%m-%Y").date()
+        except ValueError:
+            last_date = None
+
+        if last_date and last_date < date.today():
+            continue
 
         tournaments.append({
             "key": key,
