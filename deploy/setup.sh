@@ -10,11 +10,15 @@ if ! id "bot" &>/dev/null; then
     echo "Created user 'bot'"
 fi
 
-# Clone repo
-sudo -u bot git clone "$REPO" "$APP_DIR" 2>/dev/null || {
+# Create app dir and clone repo
+if [ ! -d "$APP_DIR/.git" ]; then
+    sudo mkdir -p "$APP_DIR"
+    sudo chown bot:bot "$APP_DIR"
+    sudo -u bot git clone "$REPO" "$APP_DIR"
+else
     echo "Repo already exists, pulling latest..."
     cd "$APP_DIR" && sudo -u bot git pull
-}
+fi
 
 cd "$APP_DIR"
 
