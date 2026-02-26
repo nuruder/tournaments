@@ -22,10 +22,15 @@ class TournamentPublish(StatesGroup):
 
 async def notify_admin_new_tournament(bot: Bot, tournament: dict):
     """Send notification to admin about a new tournament."""
+    location = tournament.get("location", "")
+    location_line = f"📍 {location}\n" if location else ""
+    source = tournament.get("source", "padelteams")
+    source_label = "tiepadel.com" if source == "tiepadel" else "padelteams.pt"
     text = (
-        f"🏆 <b>Новый турнир!</b>\n\n"
+        f"🏆 <b>Новый турнир!</b> ({source_label})\n\n"
         f"<b>{tournament['name']}</b>\n"
-        f"📅 {tournament['dates']}\n\n"
+        f"📅 {tournament['dates']}\n"
+        f"{location_line}\n"
         f"🔗 {tournament['tournament_url']}\n\n"
         f"Нажмите кнопку, чтобы начать публикацию."
     )

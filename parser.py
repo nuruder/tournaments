@@ -69,9 +69,93 @@ def fetch_tournaments() -> list[dict]:
     return tournaments
 
 
+def fetch_tiepadel_tournaments() -> list[dict]:
+    """Fetch FPP tournaments from tiepadel.com (Lisboa region, future only)."""
+    tournaments = []
+    offset = 0
+    today = date.today()
+
+    while True:
+        resp = requests.post(
+            "https://www.tiepadel.com/methods.aspx/Get_Find_Tournaments",
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            data='{count_items: %d, name:"", filter:1, country:196, state:0, region:11, city:0}' % offset,
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json().get("d", [])
+        if not data:
+            break
+
+        for t in data:
+            name = t.get("TITLE", "")
+            promoted = t.get("CRITOU_NAMREC", "")
+            location = t.get("LOC_NAMREC", "")
+
+            # Only FPP tournaments, location != FPP, not Liga
+            if promoted != "Federação Portuguesa de Padel":
+                continue
+            if location == "Federação Portuguesa de Padel":
+                continue
+            if "liga" in name.lower():
+                continue
+
+            # Parse start date (format: "2026-03-13 to 2026-03-15" or "2026-03-13")
+            dates_str = t.get("DATES", "")
+            start_str = dates_str.split(" to ")[0].strip()
+            try:
+                start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+            except ValueError:
+                start_date = None
+
+            if start_date and start_date <= today:
+                continue
+
+            # Convert dates to DD-MM-YYYY format for consistency
+            parts = dates_str.split(" to ")
+            converted_dates = []
+            for p in parts:
+                try:
+                    d = datetime.strptime(p.strip(), "%Y-%m-%d")
+                    converted_dates.append(d.strftime("%d-%m-%Y"))
+                except ValueError:
+                    converted_dates.append(p.strip())
+            dates = " / ".join(converted_dates)
+
+            codtou = str(t.get("CODTOU", ""))
+            link = t.get("LINK", "")
+            tournament_url = f"https://www.tiepadel.com{link}" if link.startswith("/") else link
+            image_url = t.get("IMAGE", "")
+
+            tournaments.append({
+                "key": f"tie_{codtou}",
+                "name": name,
+                "dates": dates,
+                "image_url": image_url,
+                "tournament_url": tournament_url,
+                "source": "tiepadel",
+                "location": location,
+            })
+
+        offset += len(data)
+        if len(data) < 10:
+            break
+
+    return tournaments
+
+
 if __name__ == "__main__":
+    print("=== padelteams.pt ===")
     results = fetch_tournaments()
     for t in results:
         print(f"{t['name']} | {t['dates']} | {t['tournament_url']}")
+        print(f"  Image: {t['image_url']}")
+        print()
+
+    print("=== tiepadel.com (FPP) ===")
+    results = fetch_tiepadel_tournaments()
+    for t in results:
+        print(f"{t['name']} | {t['dates']} | {t['tournament_url']}")
+        print(f"  Location: {t['location']}")
         print(f"  Image: {t['image_url']}")
         print()

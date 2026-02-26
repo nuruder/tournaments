@@ -12,6 +12,8 @@ async def init_db():
                 dates TEXT NOT NULL,
                 image_url TEXT,
                 tournament_url TEXT,
+                source TEXT DEFAULT 'padelteams',
+                location TEXT DEFAULT '',
                 status TEXT DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -28,11 +30,11 @@ async def is_tournament_known(cid: str) -> bool:
         return row is not None
 
 
-async def add_tournament(cid: str, name: str, dates: str, image_url: str, tournament_url: str):
+async def add_tournament(cid: str, name: str, dates: str, image_url: str, tournament_url: str, source: str = "padelteams", location: str = ""):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
-            "INSERT OR IGNORE INTO tournaments (cid, name, dates, image_url, tournament_url) VALUES (?, ?, ?, ?, ?)",
-            (cid, name, dates, image_url, tournament_url),
+            "INSERT OR IGNORE INTO tournaments (cid, name, dates, image_url, tournament_url, source, location) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (cid, name, dates, image_url, tournament_url, source, location),
         )
         await db.commit()
 

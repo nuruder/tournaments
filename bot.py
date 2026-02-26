@@ -7,7 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import BOT_TOKEN, CHECK_INTERVAL_MINUTES
 from database import init_db, is_tournament_known, add_tournament
-from parser import fetch_tournaments
+from parser import fetch_tournaments, fetch_tiepadel_tournaments
 from handlers import router, notify_admin_new_tournament
 
 logging.basicConfig(
@@ -20,11 +20,15 @@ logger = logging.getLogger(__name__)
 async def check_new_tournaments(bot: Bot):
     """Periodic task: fetch tournaments and notify admin about new ones."""
     logger.info("Checking for new tournaments...")
+    tournaments = []
     try:
-        tournaments = fetch_tournaments()
+        tournaments.extend(fetch_tournaments())
     except Exception:
-        logger.exception("Failed to fetch tournaments")
-        return
+        logger.exception("Failed to fetch padelteams.pt tournaments")
+    try:
+        tournaments.extend(fetch_tiepadel_tournaments())
+    except Exception:
+        logger.exception("Failed to fetch tiepadel.com tournaments")
 
     for t in tournaments:
         known = await is_tournament_known(t["key"])
@@ -36,6 +40,8 @@ async def check_new_tournaments(bot: Bot):
                 dates=t["dates"],
                 image_url=t["image_url"],
                 tournament_url=t["tournament_url"],
+                source=t.get("source", "padelteams"),
+                location=t.get("location", ""),
             )
             try:
                 await notify_admin_new_tournament(bot, t)
